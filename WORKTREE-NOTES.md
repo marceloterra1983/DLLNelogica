@@ -15,3 +15,20 @@ Verificação, as duas com `--configuration Release -p:Platform=x64`:
 - suíte inteira: exit 0, 250 passed
 
 Arquivos: `src/MarketData/MarketDataSnapshot.cs`, `src/Orders/OrderSequence.cs`, `tests/DLLNelogica.Tests/OrderConcurrencyTests.cs`, `tests/DLLNelogica.Tests/OrderSequenceTests.cs`, o bullet do preço de referência em `README.md`, e este arquivo.
+
+## Plan 002
+
+Plan 002 (`plans/002-exclusividade-gravador-relatorio.md`): feito neste worktree.
+`plans/README.md` não foi editado; o revisor mantém o índice. STOP do passo 1 não disparou.
+
+- Antes de mudar produção, `SecondWriterDoesNotAppendAndReportsOnce` falhou no código atual: a segunda escrita entrou em `_Sessao.txt` (`segunda` depois de `primeira`). Exit 1.
+- `ExclusiveAppendStream` foi para `src/Logging/ExclusiveAppendStream.cs` (namespace `DLLNelogica.Logging`), corpo idêntico. `TradeFileSystem.OpenAppend` continua chamando `ExclusiveAppendStream.Open`. `ReportFileWriter.GetOrOpen` abre por esse helper. `HandleWriteFailure` não mudou.
+- `rg -n "class ExclusiveAppendStream" src` encontra uma definição, em `src/Logging/ExclusiveAppendStream.cs`. `ReportFileWriter.cs` não abre mais `FileStream` com `FileShare.Read`.
+
+Verificação, as três com `--configuration Release -p:Platform=x64`:
+
+- filtro `TradeFileOutputTests`: exit 0, 3 passed
+- filtro `ReportWriterExclusionTests|TradeFileOutputTests`: exit 0, 4 passed
+- suíte inteira: exit 0, 251 passed
+
+Arquivos: `src/Logging/ExclusiveAppendStream.cs`, `src/Logging/ReportFileWriter.cs`, `src/TimesAndTrades/ITradeStorage.cs`, `tests/DLLNelogica.Tests/ReportWriterExclusionTests.cs`, e este arquivo.

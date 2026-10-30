@@ -105,11 +105,7 @@ internal sealed class ReportFileWriter : IDisposable
 
         // FileMode.Append não é append atômico entre processos; um único gravador por
         // arquivo evita sobrescrita silenciosa do relatório.
-        var stream = new FileStream(
-            Path.Combine(_currentDirectory, fileName),
-            FileMode.Append,
-            FileAccess.Write,
-            FileShare.Read);
+        var stream = ExclusiveAppendStream.Open(Path.Combine(_currentDirectory, fileName));
         var opened = new ReportFile(new StreamWriter(stream, Utf8WithoutBom) { AutoFlush = false });
         _files[fileName] = opened;
         return opened;
