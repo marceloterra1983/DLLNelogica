@@ -779,8 +779,8 @@ instrumento somam exatamente as 1.325 cotações que o resumo final reporta, com
     "ChannelCapacity": 4096,
     "ReportIntervalSeconds": 1,
     "Instruments": [
-      { "Ticker": "WINV26", "Exchange": "F" },
-      { "Ticker": "WDOV26", "Exchange": "F" },
+      { "Ticker": "WINZ26", "Exchange": "F" },
+      { "Ticker": "WDOZ26", "Exchange": "F" },
       { "Ticker": "PETR4", "Exchange": "B" },
       { "Ticker": "VALE3", "Exchange": "B" }
     ]
@@ -824,9 +824,10 @@ O valor padrão dessa opção é `true`.
 acompanha o mercado ao vivo; valores maiores reduzem o ruído sem afetar em nada o registro
 tick a tick, que é independente desse intervalo.
 
-> Os tickers de futuros carregam o vencimento no nome (`WINV26`, `WDOV26`) e portanto vencem.
-> Se o contrato configurado não existir mais, a assinatura é recusada e a aplicação encerra
-> por inteiro — troque o vencimento antes de rodar.
+> Os tickers de futuros carregam o vencimento no nome (`WINZ26`, `WDOZ26`) e portanto vencem.
+> Fonte de 30/10/2026: `WINZ26` vence em 16/12/2026; `WDOZ26` é o contrato seguinte ao `WDOX26`
+> (`WDOX26` vence em 03/11/2026). Se o contrato configurado não existir mais, a assinatura é
+> recusada e a aplicação encerra por inteiro — troque o vencimento de novo quando esse passar.
 
 **2. Nada a baixar:** a `src/ProfitDLL.dll` (Win64) já acompanha o repositório.
 
