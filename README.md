@@ -932,8 +932,8 @@ uma consulta já iniciada termina antes de `DLLFinalize`.
 
 Desde a Aula 06 a camada também importa `GetAccountCount`, `GetAccounts`,
 `GetAccountDetails`, `SendOrder`, `SendCancelOrderV2` e `GetOrderDetails`. Essas são chamadas
-que a aplicação faz, não callbacks que ela recebe, e por isso têm uma regra própria: todas
-passam por uma trava que o encerramento também usa. Uma chamada em andamento termina antes de
+que a aplicação faz, não callbacks que ela recebe, e por isso têm uma regra própria: a lista
+de contas tem a própria trava, e o envio não a segura dentro da trava da ordem. Uma chamada em andamento termina antes de
 `DLLFinalize`, e nenhuma começa depois do pedido de encerramento.
 
 Continua proibido fazer I/O, bloquear ou executar regra de negócio diretamente na thread de
