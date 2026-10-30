@@ -34,19 +34,22 @@ internal sealed class ProfitOrderGateway(IProfitApi api, ProfitAccountMonitor? a
         lock (_gate)
         {
             EnsureReady(stopping);
-            return _accounts.Contains(options.BrokerId, options.AccountId, stopping);
         }
+
+        // A trava da ordem não cobre esta leitura: a lista tem a própria, e o encerramento espera as duas em sequência.
+        return _accounts.Contains(options.BrokerId, options.AccountId, stopping);
     }
 
     internal long Send(OrderSequenceOptions options, byte side, bool limit, double price, CancellationToken stopping)
     {
+        if (!AccountExists(options, stopping))
+        {
+            throw new InvalidOperationException("Conta não encontrada na DLL.");
+        }
+
         lock (_gate)
         {
             EnsureReady(stopping);
-            if (!AccountExists(options, stopping))
-            {
-                throw new InvalidOperationException("Conta não encontrada na DLL.");
-            }
             _metadata.ValidateTick(options.Ticker, options.Exchange, options.TickSize);
             var order = new TConnectorSendOrder
             {
