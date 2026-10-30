@@ -608,8 +608,11 @@ A DLL informa o progresso da conexão pelo `TStateCallback(nConnStateType, nResu
 Três detalhes que só se descobrem observando a DLL em execução, e que este projeto trata:
 
 - **Os estados chegam em qualquer ordem.** Em sessões reais a ativação chegou antes do login.
-- **Os estados oscilam.** O roteamento vai e volta entre 1, 2, 4 e 5 antes de estabilizar —
-  por isso cada estado é *travado* na primeira vez que fica válido, e não reavaliado a cada evento.
+- **Os estados oscilam.** Login, roteamento e "market data já viu o resultado 4"
+  travam na primeira vez que ficam válidos. A ativação não trava: enquanto a espera não
+  completou, um resultado diferente de 0 a torna inválida de novo, e o timeout lista
+  "ativação válida corrente". Os resultados 5 e 6 não apagam um 4 já visto e também não
+  completam a conexão sozinhos.
 - **Market Data 5 e 6 continuam sendo "conectado".** São avisos de degradação e de fila local
   parada, não desconexão.
 

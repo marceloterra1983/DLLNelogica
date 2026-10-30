@@ -32,3 +32,20 @@ Verificação, as três com `--configuration Release -p:Platform=x64`:
 - suíte inteira: exit 0, 251 passed
 
 Arquivos: `src/Logging/ExclusiveAppendStream.cs`, `src/Logging/ReportFileWriter.cs`, `src/TimesAndTrades/ITradeStorage.cs`, `tests/DLLNelogica.Tests/ReportWriterExclusionTests.cs`, e este arquivo.
+
+## Plan 003
+
+Plan 003 (`plans/003-caracterizar-maquina-de-conexao.md`): feito neste worktree.
+`plans/README.md` não foi editado; o revisor mantém o índice.
+
+- Drift `45e0db5..HEAD` de `src/Connection/ConnectionStateMachine.cs` vazio. As frases do plano 001 no README ficaram; só o bullet `Os estados oscilam` mudou.
+- Login, roteamento e market data 4 travam. Ativação é reatribuída. Market data 5 e 6 não apagam um 4 e não completam a espera sozinhos. Login 2 antes de conectar falha com a mensagem já existente; depois dos quatro sucessos, não desfaz o login.
+- Nenhum `.cs` de produção foi editado.
+
+Verificação, as duas com `--configuration Release -p:Platform=x64`:
+
+- filtro `FullyQualifiedName~ConnectionStateMachineTests`: exit 0, 8 passed
+- suíte inteira: exit 0, 259 passed
+- `git diff --stat -- src/Connection/ConnectionStateMachine.cs` não imprime nada
+
+Arquivos: `tests/DLLNelogica.Tests/ConnectionStateMachineTests.cs`, o bullet dos estados em `README.md`, e este arquivo.
