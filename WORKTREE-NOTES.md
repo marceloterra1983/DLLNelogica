@@ -49,3 +49,23 @@ Verificação, as duas com `--configuration Release -p:Platform=x64`:
 - `git diff --stat -- src/Connection/ConnectionStateMachine.cs` não imprime nada
 
 Arquivos: `tests/DLLNelogica.Tests/ConnectionStateMachineTests.cs`, o bullet dos estados em `README.md`, e este arquivo.
+
+## Plan 004
+
+Plan 004 (`plans/004-ci-release-x64-ubuntu.md`): feito neste worktree.
+`plans/README.md` não foi editado; o revisor mantém o índice. Drift `45e0db5..HEAD` só em `README.md` (planos 001 e 003); os três comandos de "Como executar" ainda batiam com o plano. Não houve STOP.
+
+- `.github/workflows/ci.yml`: job `test` em `ubuntu-latest`, `actions/checkout@v4`, `actions/setup-dotnet@v4` com `dotnet-version: 9.0.x`, e `dotnet test DLLNelogica.sln --configuration Release -p:Platform=x64 --nologo`. Sem `permissions`, job Windows, cobertura ou badge.
+- Os três comandos do README ganharam `-p:Platform=x64`. Uma frase diz que a solução só configura x64.
+- `TradeAbiTests.LayoutMatchesOfficialWin64Contract` continua com `return` quando `!OperatingSystem.IsWindows()`. A ProfitDLL não foi carregada no CI nem baixada de novo.
+- SDK local é 10.0.113. O YAML não foi trocado para `10.x`. Não há run do GitHub Actions.
+
+Verificação:
+
+- `dotnet test DLLNelogica.sln --configuration Release -p:Platform=x64 --nologo`: exit 0, 259 passed
+- `dotnet build DLLNelogica.sln --configuration Release -p:Platform=x64 --nologo`: exit 0
+- `dotnet test DLLNelogica.sln --configuration Release -p:Platform=x64 --no-build --nologo`: exit 0, 259 passed
+- `dotnet build DLLNelogica.sln --configuration Release --nologo` sem plataforma: exit 0 (não foi MSB4126). A propriedade permanece no README e no YAML.
+- `rg -n "net10" .github README.md`: nenhuma ocorrência
+
+Arquivos: `.github/workflows/ci.yml`, os três comandos e a frase x64 em `README.md`, e este arquivo.

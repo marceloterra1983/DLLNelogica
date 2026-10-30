@@ -833,10 +833,12 @@ tick a tick, que é independente desse intervalo.
 **3. Compile e execute:**
 
 ```
-dotnet build DLLNelogica.sln --configuration Release
-dotnet test DLLNelogica.sln --configuration Release --no-build
-dotnet run --project src/DLLNelogica.csproj --configuration Release
+dotnet build DLLNelogica.sln --configuration Release -p:Platform=x64
+dotnet test DLLNelogica.sln --configuration Release -p:Platform=x64 --no-build
+dotnet run --project src/DLLNelogica.csproj --configuration Release -p:Platform=x64
 ```
+
+A solução só configura x64; sem `-p:Platform=x64`, o SDK pode procurar `Release|Any CPU` e falhar com MSB4126.
 
 **4. Encerre com `Ctrl+C`.** O encerramento é controlado: a aplicação chama `DLLFinalize`,
 aguarda o retorno, drena os consumidores e faz o flush final antes de terminar.
