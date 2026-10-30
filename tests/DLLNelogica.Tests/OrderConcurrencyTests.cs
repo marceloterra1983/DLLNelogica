@@ -47,14 +47,30 @@ public sealed class OrderConcurrencyTests
     [Fact]
     public void OldQueuedQuoteIsNotFreshenedByConsumer()
     {
-        var snapshot = new MarketDataSnapshot();
-        var price = new RawPriceChange(new MarketInstrument("WINV26", "F", 0), "data", 1, 1, 1000)
+        var staleTimestamp = Stopwatch.GetTimestamp() - (31 * Stopwatch.Frequency);
+        var cached = new RawPriceChange(new MarketInstrument("WINV26", "F", 0), "data", 1, 1, 1000)
         {
-            ReceivedTimestamp = Stopwatch.GetTimestamp() - 31 * Stopwatch.Frequency
+            ReceivedTimestamp = staleTimestamp
         };
-        snapshot.Record(price);
-        Assert.Null(snapshot.LatestPrice("WINV26:F"));
-        snapshot.Record(price with { ReceivedTimestamp = Stopwatch.GetTimestamp() });
-        Assert.Equal(1000, snapshot.LatestPrice("WINV26:F"));
+        var stale = new MarketDataSnapshot();
+        stale.Record(cached);
+        Assert.Null(stale.LatestPrice("WINV26:F"));
+
+        var fresh = new MarketDataSnapshot();
+        fresh.Record(cached with { ReceivedTimestamp = Stopwatch.GetTimestamp() });
+        Assert.Null(fresh.LatestPrice("WINV26:F"));
+        fresh.Record(cached with { ReceivedTimestamp = Stopwatch.GetTimestamp(), Price = 1004 });
+        Assert.Equal(1004, fresh.LatestPrice("WINV26:F"));
+        fresh.Record(cached with { ReceivedTimestamp = staleTimestamp, Price = 1008 });
+        Assert.Null(fresh.LatestPrice("WINV26:F"));
+
+        var shared = new MarketDataSnapshot();
+        shared.Record(cached with { ReceivedTimestamp = Stopwatch.GetTimestamp(), Price = 900 });
+        Assert.Null(shared.LatestPrice("winv26:f"));
+        shared.Record(new RawPriceChange(new MarketInstrument("winv26", "f", 0), "data", 2, 2, 950)
+        {
+            ReceivedTimestamp = Stopwatch.GetTimestamp()
+        });
+        Assert.Equal(950, shared.LatestPrice("WINV26:F"));
     }
 }

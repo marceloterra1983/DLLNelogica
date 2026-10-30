@@ -114,7 +114,15 @@ internal sealed class OrderSequence(ProfitOrderGateway gateway, Action<string>? 
     {
         await WaitAsync(options.WaitSeconds[step], stopping).ConfigureAwait(false);
         if (!enabled) { Write($"Ordens: passo {step + 1} desligado."); return; }
-        var price = limit ? LimitPrice(options, side) : -1;
+        var price = -1d;
+        if (limit && !TryLimitPrice(options, side, out price, out var invalidAlignment))
+        {
+            Write(invalidAlignment
+                ? $"Ordens: passo {step + 1} limitada não enviada; preço alinhado inválido."
+                : $"Ordens: passo {step + 1} limitada não enviada; sem referência de preço viva (menos de duas cotações ou cotação com mais de 30s).");
+            return;
+        }
+
         stopping.ThrowIfCancellationRequested();
         Write($"Ordens: pedido passo={step + 1} | ativo={options.Ticker}:{options.Exchange} | lado={side} | limitada={limit} | quantidade={options.Quantity} | preço={price}");
         var id = gateway.Send(options, side, limit, price, stopping);
@@ -124,20 +132,29 @@ internal sealed class OrderSequence(ProfitOrderGateway gateway, Action<string>? 
         Poll(stopping);
     }
 
-    private double LimitPrice(OrderSequenceOptions options, byte side)
+    private bool TryLimitPrice(OrderSequenceOptions options, byte side, out double price, out bool invalidAlignment)
     {
+        price = 0;
+        invalidAlignment = false;
         var quote = gateway.LatestPrice($"{options.Ticker}:{options.Exchange}");
         if (quote is null || !double.IsFinite(quote.Value) || quote <= 0)
         {
-            throw new InvalidOperationException("Cotação indisponível.");
+            return false;
         }
+
         var reference = (decimal)quote.Value;
         var raw = side == 1 ? reference - options.BuyLimitOffset : reference + options.SellLimitOffset;
         var ticks = raw / options.TickSize;
-        var price = (side == 1 ? decimal.Floor(ticks) : decimal.Ceiling(ticks)) * options.TickSize;
-        if (price <= 0) { throw new InvalidOperationException("Preço inválido."); }
-        Write($"Ordens: referência={reference} | tick configurado={options.TickSize} | preço alinhado={price}.");
-        return (double)price;
+        var aligned = (side == 1 ? decimal.Floor(ticks) : decimal.Ceiling(ticks)) * options.TickSize;
+        if (aligned <= 0)
+        {
+            invalidAlignment = true;
+            return false;
+        }
+
+        Write($"Ordens: referência={reference} | tick configurado={options.TickSize} | preço alinhado={aligned}.");
+        price = (double)aligned;
+        return true;
     }
 
     private async Task WaitAsync(int seconds, CancellationToken stopping)

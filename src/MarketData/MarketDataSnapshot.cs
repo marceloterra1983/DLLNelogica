@@ -11,9 +11,12 @@ internal sealed class MarketDataSnapshot
 
     internal double? LatestPrice(string key)
     {
+        // Uma única entrega é o cache do pregão anterior; a ordem não a usa.
+        // Duas impressões iguais contam: não compare o preço para provar mercado aberto.
         lock (_sync)
         {
             return _instruments.TryGetValue(key, out var state) &&
+                state.SampleCount >= 2 &&
                 System.Diagnostics.Stopwatch.GetElapsedTime(state.ReceivedTimestamp) <= TimeSpan.FromSeconds(30)
                 ? state.Price : null;
         }
@@ -32,6 +35,7 @@ internal sealed class MarketDataSnapshot
             state.Price = priceChange.Price;
             state.ReceivedTimestamp = priceChange.ReceivedTimestamp;
             state.IntervalTicks++;
+            state.SampleCount++;
         }
     }
 
@@ -59,5 +63,8 @@ internal sealed class MarketDataSnapshot
         internal double Price { get; set; }
 
         internal long IntervalTicks { get; set; }
+
+        // TakeInterval zera só o intervalo do resumo; a ordem conta amostras à parte.
+        internal int SampleCount { get; set; }
     }
 }

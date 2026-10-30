@@ -107,9 +107,10 @@ assinados:
   dos demais não muda.
 - O offset é a distância em pontos do preço de referência: subtraído na compra, somado na
   venda. Só é exigido quando a respectiva limitada está ligada.
-- O **preço de referência** é o último preço recebido pelo fluxo de cotações, com idade
-  máxima de 30 segundos. Sem cotação recente — mercado fechado, por exemplo — a limitada
-  não é enviada.
+- O **preço de referência** é a última cotação, com idade máxima de 30 segundos. Uma
+  única cotação não serve: com o mercado fechado, a DLL manda uma vez o preço em cache.
+  Sem referência viva, ou com preço alinhado inválido, aquele passo limitado não é
+  enviado e os passos seguintes continuam.
 - O preço calculado é alinhado ao tick: a compra arredonda para baixo, a venda para cima.
   `TickSize` é conferido com o tick que a DLL informa para o ativo; se divergirem, nada é
   enviado.
