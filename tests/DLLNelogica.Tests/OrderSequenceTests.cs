@@ -27,10 +27,10 @@ public sealed class OrderSequenceTests
             order.TradedQuantity = order.OrderStatus == 2 ? 1 : 0;
             return 0;
         };
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1003);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var lines = new List<string>();
-        await new OrderSequence(gateway, lines.Add, (_, _) => Task.CompletedTask)
+        await AccountApiScenario.Sequence(gateway, lines.Add, (_, _) => Task.CompletedTask, quote: 1003)
             .RunAsync(Options(markets), CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(expectedSends, sent.Count);
         Assert.Equal(expectedCancels, canceled.Count);

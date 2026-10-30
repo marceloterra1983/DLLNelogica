@@ -37,7 +37,7 @@ public sealed class OrderReadVersionTests
         };
         var oldRequest = new TConnectorOrderOut { Version = 1 };
         Assert.Equal(-2147483635, api.GetOrderDetails(ref oldRequest));
-        var gateway = new ProfitOrderGateway(api, _ => null);
+        var gateway = new ProfitOrderGateway(api);
         gateway.Start();
         var read = gateway.Read(123, CancellationToken.None);
         Assert.Equal(0, read.Result);
@@ -54,7 +54,7 @@ public sealed class OrderReadVersionTests
         {
             OnOrderDetails = (ref TConnectorOrderOut _) => { calls++; return (int)NResult.NL_VERSION_NOT_SUPPORTED; }
         };
-        var gateway = new ProfitOrderGateway(api, _ => null);
+        var gateway = new ProfitOrderGateway(api);
         gateway.Start();
         for (var id = 1; id <= 4; id++)
         {

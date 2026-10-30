@@ -10,6 +10,12 @@ public sealed class CallbackLifetimeTests
     [Fact]
     public async Task RootSurvivesGcFinalizationAndContainsAllCallbackFailures()
     {
+        var native = new ProfitNativeApi("profit-host-gate");
+        var nativeSession = new ProfitSession(native, CallbackRegistrationTests.CreateBridge(native));
+        var refused = nativeSession.Initialize(new CredentialsOptions { Key = "test", User = "test", Password = "test" });
+        Assert.False(refused.IsAccepted);
+        Assert.Equal("A ProfitDLL somente pode ser carregada em um processo Windows.", refused.Message);
+
         var api = new FakeProfitApi { Trade = new TConnectorTrade { Quantity = 3_000_000_000 } };
         var bridge = CallbackRegistrationTests.CreateBridge(api);
         var sink = new RecordingTradeSink();

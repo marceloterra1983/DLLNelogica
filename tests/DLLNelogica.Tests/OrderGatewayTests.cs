@@ -11,7 +11,7 @@ public sealed class OrderGatewayTests
         var scenario = new AccountApiScenario();
         scenario.Api.OnSendOrder = order => throw new InvalidOperationException(order.Password);
         scenario.Api.OnCancelOrder = order => throw new InvalidOperationException(order.Password);
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var options = Options();
         await gateway.PrepareAsync(options, CancellationToken.None);
@@ -28,7 +28,7 @@ public sealed class OrderGatewayTests
         var scenario = new AccountApiScenario();
         var sends = 0;
         scenario.Api.OnSendOrder = _ => ++sends;
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var options = Options();
         await gateway.PrepareAsync(options, stopping.Token);

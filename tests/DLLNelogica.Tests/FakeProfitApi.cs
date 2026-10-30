@@ -27,6 +27,8 @@ internal sealed class FakeProfitApi : IProfitApi
 
     public void ConfigureLibraryResolver() { }
 
+    public void EnsureHostAccepted() { }
+
     public int Initialize(string activationKey, string user, string password, ProfitCallbackSet callbacks)
     {
         InitializationCalls++;

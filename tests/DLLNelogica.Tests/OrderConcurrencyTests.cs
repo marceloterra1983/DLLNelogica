@@ -21,7 +21,7 @@ public sealed class OrderConcurrencyTests
                 return 0;
             }
         };
-        var gateway = new ProfitOrderGateway(api, _ => null);
+        var gateway = new ProfitOrderGateway(api);
         gateway.Start();
         var query = Task.Run(() => gateway.Read(1, CancellationToken.None));
         Task? stop = null;

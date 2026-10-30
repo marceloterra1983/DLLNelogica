@@ -28,10 +28,10 @@ public sealed class OrderCancellationReportTests
             order.OrderStatus = requested.Contains(order.OrderId.LocalOrderId) ? (byte)4 : (byte)0;
             return 0;
         };
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var lines = new List<string>();
-        await new OrderSequence(gateway, lines.Add, (_, _) => Task.CompletedTask)
+        await AccountApiScenario.Sequence(gateway, lines.Add, (_, _) => Task.CompletedTask, quote: 1000)
             .RunAsync(Options(), CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(2, requested.Count);
         Assert.Equal(2, lines.Count(line => line.Contains("| estado=4 (cancelada)", StringComparison.Ordinal)));

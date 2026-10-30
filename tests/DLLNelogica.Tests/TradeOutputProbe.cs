@@ -2,7 +2,7 @@ using DLLNelogica.TimesAndTrades;
 
 namespace DLLNelogica.Tests;
 
-internal sealed class TradeOutputProbe : ITradeOutput
+internal sealed class TradeOutputProbe : ITradeStorage
 {
     internal List<TradeRecord> Records { get; } = [];
     internal Func<TradeRecord, ValueTask>? BeforeWrite { get; init; }
@@ -15,5 +15,11 @@ internal sealed class TradeOutputProbe : ITradeOutput
         }
 
         Records.Add(trade);
+    }
+
+    public IReadOnlyList<TradeRecord> Maintain(DateTimeOffset now, bool complete, bool forceFlush = false) => [];
+
+    public void Dispose()
+    {
     }
 }

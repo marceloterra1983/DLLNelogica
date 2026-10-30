@@ -18,8 +18,6 @@ internal sealed class ProfitCallbackBridge
         _tradeTranslator = new ProfitTradeTranslator(profitApi);
     }
 
-    internal double? LatestPrice(string key) => Volatile.Read(ref _marketPriceEvents)?.LatestPrice(key);
-
     internal Guid TradeSessionId => _tradeTranslator.SessionId;
 
     internal bool HasTradeSink => Volatile.Read(ref _tradeEvents) is not null;

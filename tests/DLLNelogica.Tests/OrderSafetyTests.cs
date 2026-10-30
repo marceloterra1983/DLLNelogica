@@ -15,7 +15,7 @@ public sealed class OrderSafetyTests
         var scenario = new AccountApiScenario();
         var calls = 0;
         scenario.Api.OnSendOrder = _ => { calls++; return 1; };
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var options = new OrderSequenceOptions { Enabled = enabled, BrokerId = broker, AccountId = account };
         await new OrderSequence(gateway, _ => { }).RunAsync(options, CancellationToken.None);
@@ -39,9 +39,9 @@ public sealed class OrderSafetyTests
             return ++sends;
         };
         scenario.Api.OnOrderDetails = (ref TConnectorOrderOut order) => { order.OrderStatus = 2; return 0; };
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
-        await new OrderSequence(gateway, _ => { }, (_, _) => Task.CompletedTask)
+        await new OrderSequence(gateway, _ => { }, (_, _) => Task.CompletedTask, prices: AccountApiScenario.FreshQuote(1000))
             .RunAsync(Options(true, broker, "configured-account"), CancellationToken.None)
             .WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(4, sends);
@@ -55,7 +55,7 @@ public sealed class OrderSafetyTests
         var sends = 0;
         scenario.Api.OnSendOrder = _ => { sends++; stopping.Cancel(); return 1; };
         scenario.Api.OnCancelOrder = _ => throw new InvalidOperationException("Não deveria cancelar.");
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         await new OrderSequence(gateway, _ => { }, (_, _) => Task.CompletedTask).RunAsync(Options(true), stopping.Token);
         Assert.Equal(1, sends);

@@ -19,17 +19,20 @@ internal static class Program
         var profitSession = new ProfitSession(profitApi, callbackBridge);
         var configurationLoader = new JsonConfigurationLoader(AppContext.BaseDirectory);
         var metrics = new MarketDataMetrics();
+        var prices = new MarketDataSnapshot();
         var subscriptions = new MarketDataSubscriptionManager(profitSession);
         var pipelineFactory = new MarketDataPipelineFactory(
             callbackBridge,
             stateEvents,
             subscriptions,
             metrics,
-            environment.Reports);
+            environment.Reports,
+            prices);
         var sessionCoordinator = new MarketDataSessionCoordinator(
             profitSession,
             connectionState,
-            subscriptions);
+            subscriptions,
+            prices);
         var tradeFactory = new TradePipelineFactory(callbackBridge, profitSession, environment.Reports, AppContext.BaseDirectory);
         var marketDataApplication = new MarketDataApplication(sessionCoordinator, pipelineFactory, tradeFactory);
         var application = new ApplicationRunner(configurationLoader, marketDataApplication);

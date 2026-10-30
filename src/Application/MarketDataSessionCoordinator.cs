@@ -11,15 +11,18 @@ internal sealed class MarketDataSessionCoordinator
     private readonly ProfitSession _profitSession;
     private readonly ConnectionStateMachine _connectionState;
     private readonly MarketDataSubscriptionManager _subscriptions;
+    private readonly MarketDataSnapshot _prices;
 
     internal MarketDataSessionCoordinator(
         ProfitSession profitSession,
         ConnectionStateMachine connectionState,
-        MarketDataSubscriptionManager subscriptions)
+        MarketDataSubscriptionManager subscriptions,
+        MarketDataSnapshot prices)
     {
         _profitSession = profitSession;
         _connectionState = connectionState;
         _subscriptions = subscriptions;
+        _prices = prices;
     }
 
     internal async Task<int> RunAsync(ApplicationOptions options, ConsoleShutdown shutdown)
@@ -80,7 +83,7 @@ internal sealed class MarketDataSessionCoordinator
 
         TryWriteLine("Todos os instrumentos foram assinados. Pressione Ctrl+C para encerrar.");
         // A captura já está assinada; contas têm consumidor e falhas independentes.
-        await ConnectedSessionTasks.RunAsync(_profitSession, options, shutdown).ConfigureAwait(false);
+        await ConnectedSessionTasks.RunAsync(_profitSession, options, shutdown, _prices).ConfigureAwait(false);
         if (shutdown.WasRequestedByUser)
         {
             TryWriteLine("Encerramento solicitado pelo usuário.");
