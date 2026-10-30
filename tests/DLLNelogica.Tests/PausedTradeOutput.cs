@@ -2,13 +2,14 @@ using DLLNelogica.TimesAndTrades;
 
 namespace DLLNelogica.Tests;
 
-internal sealed class PausedTradeOutput : ITradeOutput, IDisposable
+internal sealed class PausedTradeOutput : ITradeStorage
 {
     private readonly TaskCompletionSource _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly ManualResetEventSlim _cancellationEntered = new();
     private readonly ManualResetEventSlim _releaseCancellation = new();
     private readonly CancellationTokenRegistration _registration;
+    private int _disposed;
     internal int Delivered { get; private set; }
     internal bool OutputReleased => _release.Task.IsCompleted;
     internal bool CancellationReleased => _releaseCancellation.IsSet;
@@ -38,8 +39,15 @@ internal sealed class PausedTradeOutput : ITradeOutput, IDisposable
         _release.TrySetResult();
     }
 
+    public IReadOnlyList<TradeRecord> Maintain(DateTimeOffset now, bool complete, bool forceFlush = false) => [];
+
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
         Release();
         _registration.Dispose();
         _cancellationEntered.Dispose();

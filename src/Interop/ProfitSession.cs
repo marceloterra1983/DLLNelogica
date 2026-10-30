@@ -16,7 +16,7 @@ internal sealed class ProfitSession
         _callbackBridge = callbackBridge;
         _agentNames = new ProfitAgentNameLookup(profitApi);
         _accounts = new ProfitAccountMonitor(profitApi);
-        Orders = new ProfitOrderGateway(profitApi, callbackBridge);
+        Orders = new ProfitOrderGateway(profitApi, _accounts);
     }
 
     internal ProfitOrderGateway Orders { get; }
@@ -28,27 +28,13 @@ internal sealed class ProfitSession
 
     internal ProfitInitializationResult Initialize(CredentialsOptions credentials)
     {
-        // Fake/API de teste não carrega a ProfitDLL: o gate de host Windows/x64 vale só
-        // para o cliente nativo. Sem isso a suíte determinística morre em Linux/CI.
-        if (_profitApi is ProfitNativeApi)
+        try
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return ProfitInitializationResult.Failed(
-                    "A ProfitDLL somente pode ser carregada em um processo Windows.");
-            }
-
-            if (!Environment.Is64BitProcess)
-            {
-                return ProfitInitializationResult.Failed(
-                    "A ProfitDLL Win64 exige que o processo seja executado em arquitetura x64.");
-            }
-
-            if (!File.Exists(_profitApi.LibraryPath))
-            {
-                return ProfitInitializationResult.Failed(
-                    $"ProfitDLL.dll não foi encontrada no diretório da aplicação: {_profitApi.LibraryPath}");
-            }
+            _profitApi.EnsureHostAccepted();
+        }
+        catch (ProfitHostRejectedException exception)
+        {
+            return ProfitInitializationResult.Failed(exception.Message);
         }
 
         if (!ProfitProcessLifetime.TryBeginInitialization())

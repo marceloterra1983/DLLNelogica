@@ -2,10 +2,9 @@ using DLLNelogica.Configuration;
 
 namespace DLLNelogica.Interop;
 
-internal sealed class ProfitOrderGateway(IProfitApi api, Func<string, double?> latestPrice)
+internal sealed class ProfitOrderGateway(IProfitApi api, ProfitAccountMonitor? accounts = null)
 {
-    internal ProfitOrderGateway(IProfitApi api, ProfitCallbackBridge bridge) : this(api, bridge.LatestPrice) { }
-
+    private readonly ProfitAccountMonitor _accounts = accounts ?? new ProfitAccountMonitor(api, static _ => { });
     private readonly object _gate = new();
     private readonly ProfitAssetMetadata _metadata = new();
     private bool _ready;
@@ -30,27 +29,27 @@ internal sealed class ProfitOrderGateway(IProfitApi api, Func<string, double?> l
         return await _metadata.WaitAsync(options.Ticker, options.Exchange, stopping).ConfigureAwait(false);
     }
 
-    internal double? LatestPrice(string key) => latestPrice(key);
-
     internal bool AccountExists(OrderSequenceOptions options, CancellationToken stopping)
     {
         lock (_gate)
         {
             EnsureReady(stopping);
-            return new ProfitAccountQuery(api).Read(stopping).Accounts.Any(account =>
-                account.BrokerId == options.BrokerId && account.AccountId == options.AccountId);
         }
+
+        // A trava da ordem não cobre esta leitura: a lista tem a própria, e o encerramento espera as duas em sequência.
+        return _accounts.Contains(options.BrokerId, options.AccountId, stopping);
     }
 
     internal long Send(OrderSequenceOptions options, byte side, bool limit, double price, CancellationToken stopping)
     {
+        if (!AccountExists(options, stopping))
+        {
+            throw new InvalidOperationException("Conta não encontrada na DLL.");
+        }
+
         lock (_gate)
         {
             EnsureReady(stopping);
-            if (!AccountExists(options, stopping))
-            {
-                throw new InvalidOperationException("Conta não encontrada na DLL.");
-            }
             _metadata.ValidateTick(options.Ticker, options.Exchange, options.TickSize);
             var order = new TConnectorSendOrder
             {

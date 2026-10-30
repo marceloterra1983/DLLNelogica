@@ -44,16 +44,16 @@ public sealed class OrderLimitSwitchTests
                 canceled.Contains(order.OrderId.LocalOrderId) ? (byte)4 : (byte)0;
             return 0;
         };
-        var quotes = 0;
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => { quotes++; return 1000; });
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var lines = new List<string>();
-        await new OrderSequence(gateway, lines.Add, (_, _) => { elapsed++; return Task.CompletedTask; })
+        await new OrderSequence(gateway, lines.Add, (_, _) => { elapsed++; return Task.CompletedTask; },
+                prices: AccountApiScenario.FreshQuote(1000))
             .RunAsync(Options(mask), CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
         AssertSteps(mask, sent, sendTimes, lines);
         var limits = sent.Count(order => order.OrderType == 2);
         Assert.Equal(limits, canceled.Count);
-        Assert.Equal(limits, quotes);
+        Assert.Equal(limits, lines.Count(line => line.StartsWith("Ordens: referência=", StringComparison.Ordinal)));
         Assert.Equal(limits == 0 ? 15 : 16, elapsed);
         Assert.Equal(limits == 0, lines.Contains("Ordens: cancelamento dispensado; nenhuma ordem limitada foi enviada."));
     }

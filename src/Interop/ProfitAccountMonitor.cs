@@ -67,6 +67,21 @@ internal sealed class ProfitAccountMonitor(IProfitApi api, Action<string>? write
         }
     }
 
+    internal bool Contains(int brokerId, string accountId, CancellationToken stopping)
+    {
+        lock (_gate)
+        {
+            stopping.ThrowIfCancellationRequested();
+            if (Volatile.Read(ref _stopping) != 0)
+            {
+                throw new OperationCanceledException();
+            }
+
+            return _query.Read(stopping).Accounts.Any(account =>
+                account.BrokerId == brokerId && account.AccountId == accountId);
+        }
+    }
+
     internal void StopAndWait()
     {
         Interlocked.Exchange(ref _stopping, 1);

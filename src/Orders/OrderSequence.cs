@@ -1,10 +1,12 @@
 using DLLNelogica.Configuration;
 using DLLNelogica.Interop;
+using DLLNelogica.MarketData;
 
 namespace DLLNelogica.Orders;
 
 internal sealed class OrderSequence(ProfitOrderGateway gateway, Action<string>? report = null,
-    Func<TimeSpan, CancellationToken, Task>? delay = null, TimeProvider? clock = null)
+    Func<TimeSpan, CancellationToken, Task>? delay = null, TimeProvider? clock = null,
+    MarketDataSnapshot? prices = null)
 {
     private const int FinalObservationSeconds = 30;
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
@@ -136,7 +138,7 @@ internal sealed class OrderSequence(ProfitOrderGateway gateway, Action<string>? 
     {
         price = 0;
         invalidAlignment = false;
-        var quote = gateway.LatestPrice($"{options.Ticker}:{options.Exchange}");
+        var quote = prices?.LatestPrice($"{options.Ticker}:{options.Exchange}");
         if (quote is null || !double.IsFinite(quote.Value) || quote <= 0)
         {
             return false;

@@ -12,12 +12,22 @@ internal sealed class ProfitNativeApi : IProfitApi
     public void ConfigureLibraryResolver() =>
         new ProfitLibraryResolver(LibraryPath).Configure();
 
+    public void EnsureHostAccepted()
+    {
+        if (ProfitHostGate.Refusal(LibraryPath) is { } refusal)
+        {
+            throw new ProfitHostRejectedException(refusal);
+        }
+    }
+
     public int Initialize(
         string activationKey,
         string user,
         string password,
-        ProfitCallbackSet callbacks) =>
-        ProfitFunctions.DLLInitializeLogin(
+        ProfitCallbackSet callbacks)
+    {
+        EnsureHostAccepted();
+        return ProfitFunctions.DLLInitializeLogin(
             activationKey,
             user,
             password,
@@ -32,6 +42,7 @@ internal sealed class ProfitNativeApi : IProfitApi
             null,
             callbacks.Progress,
             callbacks.TinyBook);
+    }
 
     public int SetAssetListInfoCallbackV2(TAssetListInfoCallbackV2 callback) => ProfitFunctions.SetAssetListInfoCallbackV2(callback);
     public int RequestTickerInfo(string ticker, string exchange) => ProfitFunctions.RequestTickerInfo(ticker, exchange);

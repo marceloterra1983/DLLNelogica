@@ -6,6 +6,8 @@ internal interface IProfitApi
 
     void ConfigureLibraryResolver();
 
+    void EnsureHostAccepted();
+
     int Initialize(
         string activationKey,
         string user,

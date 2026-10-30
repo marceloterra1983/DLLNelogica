@@ -15,7 +15,7 @@ internal sealed class TradeEventPump : ITradeEventSink
         int capacity,
         IEnumerable<string> instrumentKeys,
         TradeRecordFactory records,
-        ITradeOutput output,
+        ITradeStorage output,
         CancellationTokenSource shutdown,
         TimeProvider? clock = null,
         Action<TradeRecord>? observed = null)

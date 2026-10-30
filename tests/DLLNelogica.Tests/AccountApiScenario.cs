@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using DLLNelogica.Connection;
 using DLLNelogica.Interop;
+using DLLNelogica.MarketData;
+using DLLNelogica.Orders;
 
 namespace DLLNelogica.Tests;
 
@@ -34,6 +36,27 @@ internal sealed class AccountApiScenario
         new(51401, "1416607", "Elliot-Warren", "João")
     ];
     internal int DetailsCalls { get; private set; }
+
+    internal static OrderSequence Sequence(
+        ProfitOrderGateway gateway,
+        Action<string>? report = null,
+        Func<TimeSpan, CancellationToken, Task>? delay = null,
+        double? quote = null) =>
+        new(gateway, report, delay, prices: FreshQuote(quote));
+
+    internal static MarketDataSnapshot FreshQuote(double? quote)
+    {
+        var snapshot = new MarketDataSnapshot();
+        if (quote is double value)
+        {
+            // LatestPrice ignora a entrega única: duas amostras iguais contam como cotação viva.
+            var change = new RawPriceChange(new MarketInstrument("WINV26", "F", 0), "data", 1, 1, value);
+            snapshot.Record(change);
+            snapshot.Record(change with { NativeSequenceNumber = 2, ArrivalSequence = 2 });
+        }
+
+        return snapshot;
+    }
 
     internal int Details(ref TConnectorTradingAccountOut details)
     {

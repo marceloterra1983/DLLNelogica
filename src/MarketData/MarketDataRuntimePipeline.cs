@@ -29,14 +29,14 @@ internal sealed class MarketDataRuntimePipeline : IDisposable
         ConnectionStateEventPump stateEvents,
         MarketDataSubscriptionManager subscriptions,
         MarketDataMetrics metrics,
-        IReportLog reportLog)
+        IReportLog reportLog,
+        MarketDataSnapshot snapshot)
     {
         _shutdownRequested = shutdownRequested;
         _callbackBridge = callbackBridge;
         _stateEvents = stateEvents;
         _metrics = metrics;
 
-        var snapshot = new MarketDataSnapshot();
         _marketEvents = new MarketPriceEventPump(
             marketData.ChannelCapacity,
             metrics,

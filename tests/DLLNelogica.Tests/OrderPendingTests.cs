@@ -1,6 +1,5 @@
 using DLLNelogica.Configuration;
 using DLLNelogica.Interop;
-using DLLNelogica.Orders;
 
 namespace DLLNelogica.Tests;
 
@@ -25,9 +24,9 @@ public sealed class OrderPendingTests
             order.OrderStatus = 4;
             return 0;
         };
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
-        await new OrderSequence(gateway, _ => { }, (_, _) => Task.CompletedTask)
+        await AccountApiScenario.Sequence(gateway, _ => { }, (_, _) => Task.CompletedTask, quote: 1000)
             .RunAsync(Options(), CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(2, sends);
         Assert.Equal(2, attempts[1]);
@@ -41,10 +40,10 @@ public sealed class OrderPendingTests
         scenario.Api.NativeTick = 0.01;
         var sends = 0;
         scenario.Api.OnSendOrder = _ => ++sends;
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var lines = new List<string>();
-        await new OrderSequence(gateway, lines.Add).RunAsync(Options(), CancellationToken.None);
+        await AccountApiScenario.Sequence(gateway, lines.Add).RunAsync(Options(), CancellationToken.None);
         Assert.Equal(0, sends);
         Assert.Contains(lines, line => line.Contains("difere do tick", StringComparison.Ordinal));
     }

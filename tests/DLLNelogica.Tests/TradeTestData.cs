@@ -26,7 +26,7 @@ internal static class TradeTestData
     internal static TradeRecordFactory Records(bool resolve = false) => new(
         new TradeParticipantCache(resolve, (_, _) => new(true, null, (int)NResult.NL_NOT_FOUND, null)));
 
-    internal static TradeEventPump Pump(int capacity, ITradeOutput output, CancellationTokenSource shutdown) =>
+    internal static TradeEventPump Pump(int capacity, ITradeStorage output, CancellationTokenSource shutdown) =>
         new(capacity, ["VALE3:B", "WINV26:F"], Records(), output, shutdown);
 
     internal static void AssertBalanced(TradeMetricsSnapshot snapshot)

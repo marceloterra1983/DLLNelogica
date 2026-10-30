@@ -6,11 +6,13 @@ internal sealed class TradeConsumer(
     ChannelReader<RawTrade> reader,
     TradeMetrics metrics,
     TradeRecordFactory records,
-    ITradeOutput output,
+    ITradeStorage output,
     Action failed,
     TimeProvider clock,
     Action<TradeRecord>? observed)
 {
+    // Quantum do consumidor, não o lote do arquivo: o timer de 1s precisa de vez sob fluxo contínuo.
+    private const int TimerTurn = 1000;
     private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal Task Ready => _ready.Task;
 
@@ -41,7 +43,7 @@ internal sealed class TradeConsumer(
                     }
 
                     // Lotes limitados também dão oportunidade ao timer sob fluxo contínuo.
-                    for (var count = 0; count < TradeFileOutput.BatchSize && reader.TryRead(out var raw); count++)
+                    for (var count = 0; count < TimerTurn && reader.TryRead(out var raw); count++)
                     {
                         await ConsumeAsync(raw).ConfigureAwait(false);
                         Maintain(false);
@@ -64,7 +66,7 @@ internal sealed class TradeConsumer(
         {
             try
             {
-                (output as ITradeStorage)?.Dispose();
+                output.Dispose();
             }
             catch (Exception exception)
             {
@@ -88,12 +90,9 @@ internal sealed class TradeConsumer(
 
     private void Maintain(bool complete, bool forceFlush = false)
     {
-        if (output is ITradeStorage storage)
+        foreach (var record in output.Maintain(clock.GetLocalNow(), complete, forceFlush))
         {
-            foreach (var record in storage.Maintain(clock.GetLocalNow(), complete, forceFlush))
-            {
-                metrics.Confirmed(record);
-            }
+            metrics.Confirmed(record);
         }
     }
 }

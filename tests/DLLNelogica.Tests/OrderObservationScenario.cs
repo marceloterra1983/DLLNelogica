@@ -28,13 +28,13 @@ internal sealed class OrderObservationScenario : TimeProvider
             order.TradedQuantity = result.Filled;
             return result.Result;
         };
-        var gateway = new ProfitOrderGateway(Accounts.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(Accounts.Api);
         gateway.Start();
         await new OrderSequence(gateway, Lines.Add, (duration, _) =>
         {
             _timestamp += duration.Ticks;
             return Task.CompletedTask;
-        }, this).RunAsync(new OrderSequenceOptions
+        }, this, AccountApiScenario.FreshQuote(1000)).RunAsync(new OrderSequenceOptions
         {
             Enabled = enabled, BrokerId = 15, AccountId = "0012703", RoutingPassword = "test", Ticker = "WINV26", Exchange = "F",
             TickSize = 5, BuyLimitOffset = 10, SellLimitOffset = 10, WaitSeconds = [0, 0, 0, 0, 0]

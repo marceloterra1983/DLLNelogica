@@ -56,7 +56,7 @@ public sealed class CallbackRegistrationTests
         var api = new FakeProfitApi();
         var session = new ProfitSession(api, CreateBridge(api));
         var coordinator = new MarketDataSessionCoordinator(
-            session, new ConnectionStateMachine(), new MarketDataSubscriptionManager(session));
+            session, new ConnectionStateMachine(), new MarketDataSubscriptionManager(session), new MarketDataSnapshot());
         using var shutdown = new ConsoleShutdown();
         var exitCode = await coordinator.RunAsync(new ApplicationOptions
         {

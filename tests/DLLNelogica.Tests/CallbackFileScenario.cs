@@ -28,7 +28,8 @@ internal sealed class CallbackFileScenario : IAsyncDisposable
         };
         _runtime = new TradePipelineFactory(bridge, session, new TradeReportProbe(), _fixture.Root).Start(options, _shutdown)!;
         _subscriptions = new MarketDataSubscriptionManager(session);
-        _coordinator = new MarketDataSessionCoordinator(session, new ConnectionStateMachine(), _subscriptions);
+        _coordinator = new MarketDataSessionCoordinator(
+            session, new ConnectionStateMachine(), _subscriptions, new MarketDataSnapshot());
     }
 
     internal async Task PrepareAndSubscribeAsync()

@@ -27,10 +27,11 @@ public sealed class OrderTerminalSequenceTests
             order.TradedQuantity = order.OrderId.LocalOrderId == 1 ? filled : 0;
             return 0;
         };
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var lines = new List<string>();
-        var sequence = new OrderSequence(gateway, lines.Add, (_, _) => { delays++; return Task.CompletedTask; });
+        var sequence = AccountApiScenario.Sequence(gateway, lines.Add, (_, _) => { delays++; return Task.CompletedTask; },
+            quote: 1000);
         await sequence.RunAsync(Options(), CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(2, sends);
         Assert.Equal(0, cancels);
@@ -60,14 +61,14 @@ public sealed class OrderTerminalSequenceTests
         scenario.Api.OnSendOrder = _ => ++sends;
         scenario.Api.OnCancelOrder = _ => { cancels++; return 0; };
         scenario.Api.OnOrderDetails = (ref TConnectorOrderOut order) => { order.OrderStatus = status; return 0; };
-        var gateway = new ProfitOrderGateway(scenario.Api, _ => 1000);
+        var gateway = new ProfitOrderGateway(scenario.Api);
         gateway.Start();
         var lines = new List<string>();
-        var sequence = new OrderSequence(gateway, lines.Add, (_, token) =>
+        var sequence = AccountApiScenario.Sequence(gateway, lines.Add, (_, token) =>
         {
             stopping.Cancel();
             return Task.FromCanceled(token);
-        });
+        }, quote: 1000);
         await sequence.RunAsync(Options(), stopping.Token).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(2, cancels);
         Assert.Contains(lines, line => line.StartsWith("AVISO:", StringComparison.Ordinal));

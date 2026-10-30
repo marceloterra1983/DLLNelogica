@@ -12,19 +12,22 @@ internal sealed class MarketDataPipelineFactory
     private readonly MarketDataSubscriptionManager _subscriptions;
     private readonly MarketDataMetrics _metrics;
     private readonly IReportLog _reportLog;
+    private readonly MarketDataSnapshot _prices;
 
     internal MarketDataPipelineFactory(
         ProfitCallbackBridge callbackBridge,
         ConnectionStateEventPump stateEvents,
         MarketDataSubscriptionManager subscriptions,
         MarketDataMetrics metrics,
-        IReportLog reportLog)
+        IReportLog reportLog,
+        MarketDataSnapshot prices)
     {
         _callbackBridge = callbackBridge;
         _stateEvents = stateEvents;
         _subscriptions = subscriptions;
         _metrics = metrics;
         _reportLog = reportLog;
+        _prices = prices;
     }
 
     internal MarketDataRuntimePipeline Start(
@@ -37,5 +40,6 @@ internal sealed class MarketDataPipelineFactory
             _stateEvents,
             _subscriptions,
             _metrics,
-            _reportLog);
+            _reportLog,
+            _prices);
 }
